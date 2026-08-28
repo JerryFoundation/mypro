@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>6周健康与跑步执行打卡</title>
+<style>
+:root{--bg:#0b1020;--p:#121a2d;--p2:#17223a;--t:#eef4ff;--m:#9fb0cc;--a:#6ee7b7;--a2:#7dd3fc;--w:#fbbf24;--d:#fb7185;--l:#263552}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#0b1020,#0e1528);color:var(--t);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:1100px;margin:auto;padding:20px}h1{font-size:30px;margin:4px 0 8px}.sub,.muted{color:var(--m)}.sub{margin-bottom:18px}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}.card{background:rgba(18,26,45,.96);border:1px solid var(--l);border-radius:18px;padding:16px}.s12{grid-column:span 12}.s8{grid-column:span 8}.s6{grid-column:span 6}.s4{grid-column:span 4}
+@media(max-width:800px){.s8,.s6,.s4{grid-column:span 12}}
+.top{display:flex;gap:10px;flex-wrap:wrap;align-items:center}button,input,textarea{font:inherit}button{border:1px solid var(--l);background:#192640;color:var(--t);padding:10px 14px;border-radius:12px;cursor:pointer}button.primary{background:#1e3a46;border-color:#2e6c72}button.danger{background:#3a1f2a;border-color:#6c3044}
+input[type=date],input[type=number],textarea{width:100%;background:#0d1629;border:1px solid var(--l);color:var(--t);border-radius:10px;padding:10px}textarea{min-height:86px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}.tabs button.active{background:#214357;border-color:#4fa7b0}
+.progress{height:12px;background:#0c1528;border-radius:999px;overflow:hidden;border:1px solid var(--l)}.progress>div{height:100%;width:0;background:linear-gradient(90deg,var(--a),var(--a2))}
+.big{font-size:36px;font-weight:750}.small{font-size:13px}.days{display:grid;grid-template-columns:repeat(7,1fr);gap:10px}@media(max-width:900px){.days{grid-template-columns:1fr 1fr}}@media(max-width:520px){.days{grid-template-columns:1fr}}
+.day{background:#111a2d;border:1px solid var(--l);border-radius:14px;padding:12px}.day.today{outline:2px solid #3f7f92}.day h3{margin:0 0 8px;font-size:16px}
+.task{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px dashed #22314e}.task:first-of-type{border-top:0}.task input{margin-top:3px;transform:scale(1.15)}.task.done label{text-decoration:line-through;color:#8091ad}
+.pill{display:inline-block;border-radius:999px;padding:4px 8px;font-size:12px;margin-right:5px}.z2{background:#15372f;color:#95f3d0}.z3{background:#173446;color:#9bdcff}.z4{background:#493815;color:#ffd773}.z5{background:#481f2c;color:#ff9ab0}
+table{width:100%;border-collapse:collapse}th,td{border-bottom:1px solid var(--l);padding:10px;text-align:left;vertical-align:top}.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}@media(max-width:600px){.row2,.row3{grid-template-columns:1fr}}
+.notice{border-left:4px solid var(--a2);padding:10px 12px;background:#0d172a;border-radius:10px}.warn{border-left-color:var(--w)}.red{border-left-color:var(--d)}.footer{color:#8495b3;text-align:center;padding:24px 0 8px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>6周健康与跑步执行打卡</h1>
+<div class="sub">久坐程序员场景 · 每周二/周四约 5km · 心率导向 · 打卡数据只保存在当前浏览器</div>
+<div class="grid">
+<section class="card s12">
+<div class="top">
+<label style="min-width:220px">计划开始日<input id="startDate" type="date"></label>
+<button id="exportBtn" class="primary">导出备份 JSON</button>
+<button id="importBtn">导入备份</button><input id="importFile" type="file" accept="application/json" hidden>
+<button id="resetWeekBtn">重置本周</button><button id="resetAllBtn" class="danger">清空全部记录</button>
+</div>
+<p class="small muted">建议开始日设为周一。换设备或清理浏览器前，请先导出备份。</p>
+</section>
+<section class="card s4"><div class="muted">当前周完成度</div><div id="progressText" class="big">0%</div><div class="progress"><div id="progressBar"></div></div><div id="completionDetail" class="small muted" style="margin-top:8px">0 / 0 项</div></section>
+<section class="card s8"><h2>6周导航</h2><div class="tabs" id="weekTabs"></div><div id="weekRange" class="small muted" style="margin-top:10px"></div></section>
+<section class="card s12"><h2>本周执行表</h2><div class="days" id="days"></div></section>
+<section class="card s6">
+<h2>本周身体记录</h2>
+<div class="row3">
+<label>平均静息心率 bpm<input id="rhr" type="number" min="30" max="150"></label>
+<label>HRV (SDNN) ms<input id="hrv" type="number" min="1" max="300" step="0.1"></label>
+<label>主观疲劳 1–5<input id="fatigue" type="number" min="1" max="5"></label>
+</div>
+<div class="row2" style="margin-top:10px">
+<label>本周平均步数<input id="steps" type="number" min="0" max="50000" step="100"></label>
+<label>本周跑步次数<input id="runs" type="number" min="0" max="14"></label>
+</div>
+<div style="margin-top:10px"><label>本周备注<textarea id="notes" placeholder="例如：后程心率漂移、睡眠差、工作很忙、天气炎热……"></textarea></label></div>
+</section>
+<section class="card s6">
+<h2>个人训练心率区间</h2>
+<table><tr><th>区间</th><th>心率</th><th>用途</th></tr>
+<tr><td>Z1</td><td>&lt;135</td><td>热身、冷身、恢复</td></tr>
+<tr><td><span class="pill z2">Z2</span></td><td>135–150</td><td>周二主训练区，优先积累</td></tr>
+<tr><td><span class="pill z3">Z3</span></td><td>150–160</td><td>周四稳态主体</td></tr>
+<tr><td><span class="pill z4">Z4</span></td><td>160–170</td><td>周四少量使用</td></tr>
+<tr><td><span class="pill z5">Z5</span></td><td>&gt;170</td><td>短暂出现即可，不主动追求</td></tr></table>
+<div class="notice" style="margin-top:12px">核心目标：先实现“同样配速，心率更低”，而不是每次 5km 都跑得更狠。</div>
+</section>
+<section class="card s6"><h2>周二 5km 模板</h2><p><span class="pill z2">轻松跑</span>135–150 bpm</p><ol><li>0–8 分钟：快走 + 极慢跑，尽量 &lt;140。</li><li>8–35 分钟：维持 135–150；持续超过 150 就主动降速。</li><li>最后 5–8 分钟：仍以 140–150 为主，不冲刺。</li><li>结束标准：跑完觉得还能再跑 1–2km。</li></ol></section>
+<section class="card s6"><h2>周四 5km 模板</h2><p><span class="pill z3">稳态/渐进</span>150–165 bpm 为主</p><ol><li>前 10 分钟：135–150。</li><li>中间 15–20 分钟：150–160。</li><li>后段 8–12 分钟：状态好时 160–165。</li><li>最后 2–3 分钟：仅状态良好时短暂接近 165–170；无需每周都做。</li></ol></section>
+<section class="card s12"><h2>减量与安全规则</h2><div class="row3">
+<div class="notice"><b>绿色：照常</b><br>静息心率接近个人常态；HRV 接近近期基线；轻松跑心率可控。</div>
+<div class="notice warn"><b>黄色：主动降级</b><br>静息心率连续数日明显偏高 + HRV 连续偏低 + 主观疲劳时，把跑步改为 20–40 分钟步行或休息。</div>
+<div class="notice red"><b>红色：停止并评估</b><br>胸痛、晕厥/近晕厥、明显异常气短、持续明显心悸时停止运动并及时就医。</div>
+</div></section>
+</div>
+<div class="footer">个人训练管理工具 · 非医疗诊断 · 页面不上传你的打卡数据</div>
+</div>
+<script>
+const KEY='personal_health_run_plan_v1';
+const base={startDate:'2026-08-31',currentWeek:0,weeks:Array.from({length:6},()=>({checks:{},metrics:{rhr:'',hrv:'',fatigue:'',steps:'',runs:'',notes:''}}))};
+const tasks=[
+{day:'周一',tasks:['15–30 分钟轻松步行','工作期间每 60–90 分钟起身 3–5 分钟']},
+{day:'周二',tasks:['完成约 5km 轻松跑','绝大部分心率保持 135–150 bpm','不为了配速长期突破 150']},
+{day:'周三',tasks:['15–20 分钟力量训练','轻松步行/餐后走']},
+{day:'周四',tasks:['完成约 5km 稳态/渐进跑','主要心率保持 150–165 bpm','170+ 只短暂出现，不主动追求']},
+{day:'周五',tasks:['15–30 分钟恢复步行','工作期间每 60–90 分钟起身 3–5 分钟']},
+{day:'周六',tasks:['可选：20 分钟力量 或 45–60 分钟长走']},
+{day:'周日',tasks:['休息/轻松散步','完成本周数据复盘与备注']}];
+let state=load();
+function clone(x){return JSON.parse(JSON.stringify(x))}
+function norm(s){s.startDate=s.startDate||base.startDate;s.currentWeek=Math.min(5,Math.max(0,Number(s.currentWeek)||0));s.weeks=s.weeks||[];while(s.weeks.length<6)s.weeks.push(clone(base.weeks[0]));s.weeks=s.weeks.slice(0,6).map(w=>({checks:w.checks||{},metrics:{...base.weeks[0].metrics,...(w.metrics||{})}}));return s}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.weeks)return norm(s)}catch(e){}return clone(base)}
+function save(){localStorage.setItem(KEY,JSON.stringify(state))}
+function fmt(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function addDays(ds,n){const d=new Date(ds+'T00:00:00');d.setDate(d.getDate()+n);return d}
+function renderTabs(){const el=document.getElementById('weekTabs');el.innerHTML='';for(let i=0;i<6;i++){const b=document.createElement('button');b.textContent='第 '+(i+1)+' 周';if(i===state.currentWeek)b.classList.add('active');b.onclick=()=>{state.currentWeek=i;save();render()};el.appendChild(b)}const s=addDays(state.startDate,state.currentWeek*7),e=addDays(fmt(s),6);document.getElementById('weekRange').textContent=fmt(s)+' ～ '+fmt(e)}
+function renderDays(){const box=document.getElementById('days');box.innerHTML='';const w=state.weeks[state.currentWeek],today=fmt(new Date());tasks.forEach((d,di)=>{const date=fmt(addDays(state.startDate,state.currentWeek*7+di));const card=document.createElement('div');card.className='day'+(date===today?' today':'');card.innerHTML='<h3>'+d.day+' <span class="small muted">'+date+'</span></h3>';d.tasks.forEach((t,ti)=>{const id='d'+di+'t'+ti,done=!!w.checks[id],row=document.createElement('div');row.className='task'+(done?' done':'');row.innerHTML='<input type="checkbox" '+(done?'checked':'')+' id="'+id+'"><label for="'+id+'">'+t+'</label>';row.querySelector('input').onchange=e=>{w.checks[id]=e.target.checked;save();renderDays();renderProgress()};card.appendChild(row)});box.appendChild(card)})}
+function renderProgress(){const w=state.weeks[state.currentWeek];let total=0,done=0;tasks.forEach((d,di)=>d.tasks.forEach((t,ti)=>{total++;if(w.checks['d'+di+'t'+ti])done++}));const p=total?Math.round(done*100/total):0;document.getElementById('progressText').textContent=p+'%';document.getElementById('progressBar').style.width=p+'%';document.getElementById('completionDetail').textContent=done+' / '+total+' 项'}
+function bindMetrics(){const w=state.weeks[state.currentWeek];['rhr','hrv','fatigue','steps','runs','notes'].forEach(id=>{const el=document.getElementById(id);el.value=w.metrics[id]||'';el.oninput=()=>{w.metrics[id]=el.value;save()}})}
+function render(){document.getElementById('startDate').value=state.startDate;renderTabs();renderDays();renderProgress();bindMetrics()}
+document.getElementById('startDate').onchange=e=>{state.startDate=e.target.value||base.startDate;save();render()}
+document.getElementById('resetWeekBtn').onclick=()=>{if(confirm('确认清空当前周的勾选和记录？')){state.weeks[state.currentWeek]=clone(base.weeks[0]);save();render()}}
+document.getElementById('resetAllBtn').onclick=()=>{if(confirm('确认清空全部 6 周记录？此操作不可撤销。')){state=clone(base);save();render()}}
+document.getElementById('exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='健康跑步打卡备份.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
+document.getElementById('importBtn').onclick=()=>document.getElementById('importFile').click()
+document.getElementById('importFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{state=norm(JSON.parse(r.result));save();render();alert('导入成功')}catch(x){alert('导入失败：JSON 文件无效')}};r.readAsText(f)}
+render();
+</script>
+</body></html>
