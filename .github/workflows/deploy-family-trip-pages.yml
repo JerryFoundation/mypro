@@ -2,7 +2,7 @@ name: Deploy family trip guide to GitHub Pages
 
 on:
   push:
-    branches: [master, main]
+    branches: [main]
     paths:
       - "sendai-aomori-family-trip/**"
       - ".github/workflows/deploy-family-trip-pages.yml"
